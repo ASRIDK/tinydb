@@ -1,0 +1,16 @@
+# Build output
+build/
+*.o
+*.d
+
+# Database files created by tests and local runs
+*.db
+
+# Python
+__pycache__/
+*.pyc
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
