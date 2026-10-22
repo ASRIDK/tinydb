@@ -3,6 +3,7 @@
 
 #include "input.h"
 #include "statement.h"
+#include "table.h"
 
 typedef enum {
     META_COMMAND_SUCCESS,
@@ -10,12 +11,12 @@ typedef enum {
     META_COMMAND_UNRECOGNIZED_COMMAND
 } MetaCommandResult;
 
-typedef enum { EXECUTE_SUCCESS } ExecuteResult;
+typedef enum { EXECUTE_SUCCESS, EXECUTE_TABLE_FULL } ExecuteResult;
 
 /* Handles dot-prefixed commands such as ".exit". */
 MetaCommandResult do_meta_command(const InputBuffer *input);
 
-/* Executes a compiled statement. */
-ExecuteResult execute_statement(const Statement *statement);
+/* Executes a compiled statement against the table. */
+ExecuteResult execute_statement(const Statement *statement, Table *table);
 
 #endif

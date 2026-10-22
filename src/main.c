@@ -3,6 +3,7 @@
 
 #include "input.h"
 #include "statement.h"
+#include "table.h"
 #include "vm.h"
 
 static void print_prompt(void) {
@@ -10,8 +11,9 @@ static void print_prompt(void) {
 }
 
 int main(void) {
+    Table *table = table_new();
     InputBuffer *input = input_buffer_new();
-    if (input == NULL) {
+    if (table == NULL || input == NULL) {
         fprintf(stderr, "Error: out of memory.\n");
         return EXIT_FAILURE;
     }
@@ -20,27 +22,32 @@ int main(void) {
         print_prompt();
         if (read_input(input) != 0) {
             fprintf(stderr, "Error reading input.\n");
-            input_buffer_free(input);
-            return EXIT_FAILURE;
+            break;
         }
 
         if (input->buffer[0] == '.') {
-            switch (do_meta_command(input)) {
-            case META_COMMAND_SUCCESS:
-                continue;
-            case META_COMMAND_EXIT:
+            MetaCommandResult result = do_meta_command(input);
+            if (result == META_COMMAND_EXIT) {
                 input_buffer_free(input);
+                table_free(table);
                 return EXIT_SUCCESS;
-            case META_COMMAND_UNRECOGNIZED_COMMAND:
-                printf("Unrecognized command '%s'.\n", input->buffer);
-                continue;
             }
+            if (result == META_COMMAND_UNRECOGNIZED_COMMAND) {
+                printf("Unrecognized command '%s'.\n", input->buffer);
+            }
+            continue;
         }
 
         Statement statement;
         switch (prepare_statement(input, &statement)) {
         case PREPARE_SUCCESS:
             break;
+        case PREPARE_NEGATIVE_ID:
+            printf("ID must be positive.\n");
+            continue;
+        case PREPARE_STRING_TOO_LONG:
+            printf("String is too long.\n");
+            continue;
         case PREPARE_SYNTAX_ERROR:
             printf("Syntax error. Could not parse statement.\n");
             continue;
@@ -49,7 +56,17 @@ int main(void) {
             continue;
         }
 
-        execute_statement(&statement);
-        printf("Executed.\n");
+        switch (execute_statement(&statement, table)) {
+        case EXECUTE_SUCCESS:
+            printf("Executed.\n");
+            break;
+        case EXECUTE_TABLE_FULL:
+            printf("Error: Table full.\n");
+            break;
+        }
     }
+
+    input_buffer_free(input);
+    table_free(table);
+    return EXIT_FAILURE;
 }
