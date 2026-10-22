@@ -39,6 +39,8 @@ typedef enum { NODE_INTERNAL, NODE_LEAF } NodeType;
 #define INTERNAL_NODE_CELL_SIZE (INTERNAL_NODE_CHILD_SIZE + INTERNAL_NODE_KEY_SIZE)
 /* Deliberately tiny so that the tests can exercise internal node splits. */
 #define INTERNAL_NODE_MAX_KEYS 3
+/* Marks the right child of an empty internal node (page 0 is the root, so 0 is a valid child). */
+#define INVALID_PAGE_NUM UINT32_MAX
 
 /*
  * Leaf node layout
@@ -110,6 +112,9 @@ void leaf_node_insert(Cursor *cursor, uint32_t key, const Row *row);
 
 /* Largest key stored in the subtree rooted at `node`. */
 uint32_t get_node_max_key(Pager *pager, void *node);
+
+/* Number of levels in the tree; a lone root leaf has height 1. */
+uint32_t tree_height(Pager *pager, uint32_t root_page_num);
 
 /* Debug output for the .constants and .btree meta-commands. */
 void print_constants(void);

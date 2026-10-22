@@ -25,6 +25,12 @@ MetaCommandResult do_meta_command(const InputBuffer *input, Table *table) {
 }
 
 static ExecuteResult execute_insert(const Statement *statement, Table *table) {
+    /* Worst case, an insert splits every level and grows a new root. */
+    uint32_t pages_needed = tree_height(table->pager, table->root_page_num) + 1;
+    if (table->pager->num_pages + pages_needed > TABLE_MAX_PAGES) {
+        return EXECUTE_TABLE_FULL;
+    }
+
     const Row *row = &statement->row_to_insert;
     Cursor *cursor = table_find(table, row->id);
     void *node = get_page(table->pager, cursor->page_num);
