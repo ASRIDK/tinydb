@@ -20,7 +20,4 @@ Table *db_open(const char *filename);
 /* Flushes every cached page to disk and releases all resources. */
 void db_close(Table *table);
 
-/* Returns the memory slot where row `row_num` lives. */
-void *row_slot(Table *table, uint32_t row_num);
-
 #endif
