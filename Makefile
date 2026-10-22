@@ -6,7 +6,7 @@ SRC := $(wildcard src/*.c)
 OBJ := $(SRC:src/%.c=build/%.o)
 BIN := build/tinydb
 
-.PHONY: all test clean
+.PHONY: all test sanitize clean
 
 all: $(BIN)
 
@@ -21,6 +21,11 @@ build:
 
 test: $(BIN)
 	python3 -m unittest discover -s tests -v
+
+# Rebuilds with AddressSanitizer and UndefinedBehaviorSanitizer, then runs the tests.
+sanitize: clean
+	$(MAKE) test CFLAGS="-std=c11 -O1 -g -Wall -Wextra -Wpedantic -Werror \
+		-fsanitize=address,undefined -fno-omit-frame-pointer"
 
 clean:
 	rm -rf build
