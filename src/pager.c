@@ -30,6 +30,12 @@ Pager *pager_open(const char *filename) {
     }
     pager->file_descriptor = fd;
     pager->file_length = (uint32_t)file_length;
+    pager->num_pages = (uint32_t)(file_length / PAGE_SIZE);
+
+    if (file_length % PAGE_SIZE != 0) {
+        fprintf(stderr, "Error: database file is not a whole number of pages. Corrupt file.\n");
+        exit(EXIT_FAILURE);
+    }
     return pager;
 }
 
@@ -46,24 +52,23 @@ void *get_page(Pager *pager, uint32_t page_num) {
             fatal("out of memory");
         }
 
-        /* A trailing partial page still counts as a page on disk. */
-        uint32_t num_pages = pager->file_length / PAGE_SIZE;
-        if (pager->file_length % PAGE_SIZE) {
-            num_pages++;
-        }
-
-        if (page_num < num_pages) {
+        uint32_t pages_on_disk = pager->file_length / PAGE_SIZE;
+        if (page_num < pages_on_disk) {
             if (lseek(pager->file_descriptor, (off_t)page_num * PAGE_SIZE, SEEK_SET) == -1 ||
                 read(pager->file_descriptor, page, PAGE_SIZE) == -1) {
                 fatal("unable to read database file");
             }
         }
         pager->pages[page_num] = page;
+
+        if (page_num >= pager->num_pages) {
+            pager->num_pages = page_num + 1;
+        }
     }
     return pager->pages[page_num];
 }
 
-void pager_flush(Pager *pager, uint32_t page_num, uint32_t size) {
+void pager_flush(Pager *pager, uint32_t page_num) {
     if (pager->pages[page_num] == NULL) {
         fprintf(stderr, "Error: tried to flush a page that is not cached.\n");
         exit(EXIT_FAILURE);
@@ -71,7 +76,7 @@ void pager_flush(Pager *pager, uint32_t page_num, uint32_t size) {
     if (lseek(pager->file_descriptor, (off_t)page_num * PAGE_SIZE, SEEK_SET) == -1) {
         fatal("unable to seek database file");
     }
-    if (write(pager->file_descriptor, pager->pages[page_num], size) == -1) {
+    if (write(pager->file_descriptor, pager->pages[page_num], PAGE_SIZE) == -1) {
         fatal("unable to write database file");
     }
 }

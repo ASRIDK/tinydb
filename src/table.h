@@ -6,15 +6,13 @@
 #include "pager.h"
 #include "row.h"
 
-#define ROWS_PER_PAGE (PAGE_SIZE / ROW_SIZE)
-#define TABLE_MAX_ROWS (ROWS_PER_PAGE * TABLE_MAX_PAGES)
-
+/* A table is a B-tree of rows keyed by id, rooted at `root_page_num`. */
 typedef struct {
     Pager *pager;
-    uint32_t num_rows;
+    uint32_t root_page_num;
 } Table;
 
-/* Opens the database file and loads the table metadata. */
+/* Opens the database file, initializing an empty root leaf for new files. */
 Table *db_open(const char *filename);
 
 /* Flushes every cached page to disk and releases all resources. */

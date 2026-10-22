@@ -41,10 +41,45 @@ class TestTinyDB(unittest.TestCase):
         self.assertEqual(output, ["db > (1, user1, person1@example.com)", "Executed.", "db > "])
 
     def test_prints_error_when_table_is_full(self):
-        commands = [f"insert {i} user{i} person{i}@example.com" for i in range(1, 1402)]
+        commands = [f"insert {i} user{i} person{i}@example.com" for i in range(1, 15)]
         commands.append(".exit")
         output = self.run_script(commands)
         self.assertEqual(output[-2], "db > Error: Table full.")
+
+    def test_prints_constants(self):
+        output = self.run_script([".constants", ".exit"])
+        self.assertEqual(
+            output,
+            [
+                "db > Constants:",
+                "ROW_SIZE: 293",
+                "COMMON_NODE_HEADER_SIZE: 6",
+                "LEAF_NODE_HEADER_SIZE: 10",
+                "LEAF_NODE_CELL_SIZE: 297",
+                "LEAF_NODE_SPACE_FOR_CELLS: 4086",
+                "LEAF_NODE_MAX_CELLS: 13",
+                "db > ",
+            ],
+        )
+
+    def test_prints_structure_of_one_node_btree(self):
+        commands = [f"insert {i} user{i} person{i}@example.com" for i in (3, 1, 2)]
+        commands += [".btree", ".exit"]
+        output = self.run_script(commands)
+        self.assertEqual(
+            output,
+            [
+                "db > Executed.",
+                "db > Executed.",
+                "db > Executed.",
+                "db > Tree:",
+                "leaf (size 3)",
+                "  - 0 : 3",
+                "  - 1 : 1",
+                "  - 2 : 2",
+                "db > ",
+            ],
+        )
 
     def test_allows_strings_of_maximum_length(self):
         username = "a" * 32

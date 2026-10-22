@@ -13,8 +13,8 @@ typedef enum {
 
 typedef enum { EXECUTE_SUCCESS, EXECUTE_TABLE_FULL } ExecuteResult;
 
-/* Handles dot-prefixed commands such as ".exit". */
-MetaCommandResult do_meta_command(const InputBuffer *input);
+/* Handles dot-prefixed commands such as ".exit", ".btree" and ".constants". */
+MetaCommandResult do_meta_command(const InputBuffer *input, Table *table);
 
 /* Executes a compiled statement against the table. */
 ExecuteResult execute_statement(const Statement *statement, Table *table);

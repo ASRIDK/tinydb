@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "btree.h"
+
 Table *db_open(const char *filename) {
     Pager *pager = pager_open(filename);
     Table *table = malloc(sizeof(Table));
@@ -11,26 +13,23 @@ Table *db_open(const char *filename) {
         exit(EXIT_FAILURE);
     }
     table->pager = pager;
-    table->num_rows = pager->file_length / ROW_SIZE;
+    table->root_page_num = 0;
+
+    if (pager->num_pages == 0) {
+        /* New database file: page 0 becomes an empty leaf node. */
+        void *root_node = get_page(pager, 0);
+        initialize_leaf_node(root_node);
+    }
     return table;
 }
 
 void db_close(Table *table) {
     Pager *pager = table->pager;
-    uint32_t num_full_pages = table->num_rows / ROWS_PER_PAGE;
-
-    for (uint32_t i = 0; i < num_full_pages; i++) {
+    for (uint32_t i = 0; i < pager->num_pages; i++) {
         if (pager->pages[i] != NULL) {
-            pager_flush(pager, i, PAGE_SIZE);
+            pager_flush(pager, i);
         }
     }
-
-    /* The last page may be partially filled; only write the used bytes. */
-    uint32_t num_additional_rows = table->num_rows % ROWS_PER_PAGE;
-    if (num_additional_rows > 0 && pager->pages[num_full_pages] != NULL) {
-        pager_flush(pager, num_full_pages, num_additional_rows * ROW_SIZE);
-    }
-
     pager_close(pager);
     free(table);
 }

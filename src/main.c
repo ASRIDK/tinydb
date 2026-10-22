@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
         }
 
         if (input->buffer[0] == '.') {
-            MetaCommandResult result = do_meta_command(input);
+            MetaCommandResult result = do_meta_command(input, table);
             if (result == META_COMMAND_EXIT) {
                 input_buffer_free(input);
                 db_close(table);
