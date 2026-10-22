@@ -10,10 +10,15 @@ static void print_prompt(void) {
     printf("db > ");
 }
 
-int main(void) {
-    Table *table = table_new();
+int main(int argc, char *argv[]) {
+    if (argc < 2) {
+        fprintf(stderr, "Usage: %s <database-file>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
+
+    Table *table = db_open(argv[1]);
     InputBuffer *input = input_buffer_new();
-    if (table == NULL || input == NULL) {
+    if (input == NULL) {
         fprintf(stderr, "Error: out of memory.\n");
         return EXIT_FAILURE;
     }
@@ -29,7 +34,7 @@ int main(void) {
             MetaCommandResult result = do_meta_command(input);
             if (result == META_COMMAND_EXIT) {
                 input_buffer_free(input);
-                table_free(table);
+                db_close(table);
                 return EXIT_SUCCESS;
             }
             if (result == META_COMMAND_UNRECOGNIZED_COMMAND) {
@@ -67,6 +72,6 @@ int main(void) {
     }
 
     input_buffer_free(input);
-    table_free(table);
+    db_close(table);
     return EXIT_FAILURE;
 }
