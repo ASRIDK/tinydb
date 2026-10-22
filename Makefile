@@ -1,6 +1,7 @@
 CC      ?= cc
 CFLAGS  ?= -std=c11 -O2 -Wall -Wextra -Wpedantic -Werror
-CFLAGS  += -D_POSIX_C_SOURCE=200809L
+# Required for getline(); kept separate so overriding CFLAGS cannot drop it.
+override CPPFLAGS += -D_POSIX_C_SOURCE=200809L
 
 SRC := $(wildcard src/*.c)
 OBJ := $(SRC:src/%.c=build/%.o)
@@ -14,7 +15,7 @@ $(BIN): $(OBJ)
 	$(CC) $(CFLAGS) -o $@ $^
 
 build/%.o: src/%.c | build
-	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
+	$(CC) $(CPPFLAGS) $(CFLAGS) -MMD -MP -c $< -o $@
 
 build:
 	mkdir -p build
