@@ -20,6 +20,9 @@ Pager *pager_open(const char *filename);
 /* Returns page `page_num`, loading it from disk on a cache miss. */
 void *get_page(Pager *pager, uint32_t page_num);
 
+/* Pages are appended at the end of the file; there is no free list yet. */
+uint32_t pager_unused_page_num(const Pager *pager);
+
 /* Writes a cached page back to disk. */
 void pager_flush(Pager *pager, uint32_t page_num);
 

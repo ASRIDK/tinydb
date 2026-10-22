@@ -19,13 +19,24 @@ static Cursor *cursor_new(Table *table, uint32_t page_num, uint32_t cell_num) {
     return cursor;
 }
 
-Cursor *table_start(Table *table) {
-    return cursor_new(table, table->root_page_num, 0);
+Cursor *table_find(Table *table, uint32_t key) {
+    uint32_t page_num = table->root_page_num;
+    void *node = get_page(table->pager, page_num);
+
+    while (get_node_type(node) == NODE_INTERNAL) {
+        page_num = internal_node_child(node, internal_node_find_child(node, key));
+        node = get_page(table->pager, page_num);
+    }
+    return cursor_new(table, page_num, leaf_node_find(node, key));
 }
 
-Cursor *table_find(Table *table, uint32_t key) {
-    void *root_node = get_page(table->pager, table->root_page_num);
-    return cursor_new(table, table->root_page_num, leaf_node_find(root_node, key));
+Cursor *table_start(Table *table) {
+    /* The smallest possible key always lands on the leftmost leaf. */
+    Cursor *cursor = table_find(table, 0);
+    cursor->cell_num = 0;
+    void *node = get_page(table->pager, cursor->page_num);
+    cursor->end_of_table = leaf_node_num_cells(node) == 0;
+    return cursor;
 }
 
 void *cursor_value(Cursor *cursor) {

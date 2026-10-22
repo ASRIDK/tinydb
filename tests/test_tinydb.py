@@ -40,12 +40,6 @@ class TestTinyDB(unittest.TestCase):
         output = self.run_script(["select", ".exit"])
         self.assertEqual(output, ["db > (1, user1, person1@example.com)", "Executed.", "db > "])
 
-    def test_prints_error_when_table_is_full(self):
-        commands = [f"insert {i} user{i} person{i}@example.com" for i in range(1, 15)]
-        commands.append(".exit")
-        output = self.run_script(commands)
-        self.assertEqual(output[-2], "db > Error: Table full.")
-
     def test_rejects_duplicate_id(self):
         output = self.run_script(
             [
@@ -93,10 +87,10 @@ class TestTinyDB(unittest.TestCase):
                 "db > Executed.",
                 "db > Executed.",
                 "db > Tree:",
-                "leaf (size 3)",
-                "  - 0 : 1",
-                "  - 1 : 2",
-                "  - 2 : 3",
+                "- leaf (size 3)",
+                "  - 1",
+                "  - 2",
+                "  - 3",
                 "db > ",
             ],
         )
@@ -126,6 +120,25 @@ class TestTinyDB(unittest.TestCase):
             [
                 "db > Syntax error. Could not parse statement.",
                 "db > Syntax error. Could not parse statement.",
+                "db > ",
+            ],
+        )
+
+    def test_prints_structure_of_three_leaf_node_btree(self):
+        commands = [f"insert {i} user{i} person{i}@example.com" for i in range(1, 15)]
+        commands += [".btree", "insert 15 user15 person15@example.com", ".exit"]
+        output = self.run_script(commands)
+        self.assertEqual(
+            output[14:],
+            [
+                "db > Tree:",
+                "- internal (size 1)",
+                "  - leaf (size 7)",
+                *[f"    - {i}" for i in range(1, 8)],
+                "  - key 7",
+                "  - leaf (size 7)",
+                *[f"    - {i}" for i in range(8, 15)],
+                "db > Executed.",
                 "db > ",
             ],
         )

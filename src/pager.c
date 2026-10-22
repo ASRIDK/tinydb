@@ -68,6 +68,10 @@ void *get_page(Pager *pager, uint32_t page_num) {
     return pager->pages[page_num];
 }
 
+uint32_t pager_unused_page_num(const Pager *pager) {
+    return pager->num_pages;
+}
+
 void pager_flush(Pager *pager, uint32_t page_num) {
     if (pager->pages[page_num] == NULL) {
         fprintf(stderr, "Error: tried to flush a page that is not cached.\n");
