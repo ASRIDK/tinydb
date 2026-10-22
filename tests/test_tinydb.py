@@ -68,9 +68,9 @@ class TestTinyDB(unittest.TestCase):
                 "db > Constants:",
                 "ROW_SIZE: 293",
                 "COMMON_NODE_HEADER_SIZE: 6",
-                "LEAF_NODE_HEADER_SIZE: 10",
+                "LEAF_NODE_HEADER_SIZE: 14",
                 "LEAF_NODE_CELL_SIZE: 297",
-                "LEAF_NODE_SPACE_FOR_CELLS: 4086",
+                "LEAF_NODE_SPACE_FOR_CELLS: 4082",
                 "LEAF_NODE_MAX_CELLS: 13",
                 "db > ",
             ],
@@ -141,6 +141,16 @@ class TestTinyDB(unittest.TestCase):
                 "db > Executed.",
                 "db > ",
             ],
+        )
+
+    def test_prints_all_rows_in_a_multi_level_tree(self):
+        commands = [f"insert {i} user{i} person{i}@example.com" for i in range(1, 16)]
+        commands += ["select", ".exit"]
+        output = self.run_script(commands)
+        expected_rows = ["(1, user1, person1@example.com)"]
+        expected_rows += [f"({i}, user{i}, person{i}@example.com)" for i in range(2, 16)]
+        self.assertEqual(
+            output[15:], ["db > " + expected_rows[0], *expected_rows[1:], "Executed.", "db > "]
         )
 
 

@@ -115,6 +115,14 @@ void set_leaf_node_num_cells(void *node, uint32_t num_cells) {
     write_u32(node, LEAF_NODE_NUM_CELLS_OFFSET, num_cells);
 }
 
+uint32_t leaf_node_next_leaf(const void *node) {
+    return read_u32(node, LEAF_NODE_NEXT_LEAF_OFFSET);
+}
+
+void set_leaf_node_next_leaf(void *node, uint32_t page_num) {
+    write_u32(node, LEAF_NODE_NEXT_LEAF_OFFSET, page_num);
+}
+
 void *leaf_node_cell(void *node, uint32_t cell_num) {
     return (char *)node + LEAF_NODE_HEADER_SIZE + cell_num * LEAF_NODE_CELL_SIZE;
 }
@@ -135,6 +143,7 @@ void initialize_leaf_node(void *node) {
     set_node_type(node, NODE_LEAF);
     set_node_root(node, false);
     set_leaf_node_num_cells(node, 0);
+    set_leaf_node_next_leaf(node, 0);
 }
 
 uint32_t leaf_node_find(void *node, uint32_t key) {
@@ -200,6 +209,10 @@ static void leaf_node_split_and_insert(Cursor *cursor, uint32_t key, const Row *
     uint32_t new_page_num = pager_unused_page_num(pager);
     void *new_node = get_page(pager, new_page_num);
     initialize_leaf_node(new_node);
+
+    /* The new leaf slots in to the right of the old one in the sibling chain. */
+    set_leaf_node_next_leaf(new_node, leaf_node_next_leaf(old_node));
+    set_leaf_node_next_leaf(old_node, new_page_num);
 
     /* Walk from the top down so cells can be moved within old_node in place. */
     for (int32_t i = LEAF_NODE_MAX_CELLS; i >= 0; i--) {

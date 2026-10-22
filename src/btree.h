@@ -40,12 +40,17 @@ typedef enum { NODE_INTERNAL, NODE_LEAF } NodeType;
 
 /*
  * Leaf node layout
- *   | common header | num_cells (4) | cell 0 | cell 1 | ... |
+ *   | common header | num_cells (4) | next_leaf (4) | cell 0 | cell 1 | ... |
  *   where each cell is | key (4) | serialized row (ROW_SIZE) |
+ *   next_leaf is the page of the right sibling, or 0 for the rightmost leaf
+ *   (page 0 is always the root, so it can never be a sibling).
  */
 #define LEAF_NODE_NUM_CELLS_SIZE sizeof(uint32_t)
 #define LEAF_NODE_NUM_CELLS_OFFSET COMMON_NODE_HEADER_SIZE
-#define LEAF_NODE_HEADER_SIZE (COMMON_NODE_HEADER_SIZE + LEAF_NODE_NUM_CELLS_SIZE)
+#define LEAF_NODE_NEXT_LEAF_SIZE sizeof(uint32_t)
+#define LEAF_NODE_NEXT_LEAF_OFFSET (LEAF_NODE_NUM_CELLS_OFFSET + LEAF_NODE_NUM_CELLS_SIZE)
+#define LEAF_NODE_HEADER_SIZE                                                                      \
+    (COMMON_NODE_HEADER_SIZE + LEAF_NODE_NUM_CELLS_SIZE + LEAF_NODE_NEXT_LEAF_SIZE)
 
 #define LEAF_NODE_KEY_SIZE sizeof(uint32_t)
 #define LEAF_NODE_KEY_OFFSET 0
@@ -82,6 +87,8 @@ uint32_t internal_node_find_child(void *node, uint32_t key);
 /* Leaf node accessors. */
 uint32_t leaf_node_num_cells(const void *node);
 void set_leaf_node_num_cells(void *node, uint32_t num_cells);
+uint32_t leaf_node_next_leaf(const void *node);
+void set_leaf_node_next_leaf(void *node, uint32_t page_num);
 void *leaf_node_cell(void *node, uint32_t cell_num);
 uint32_t leaf_node_key(void *node, uint32_t cell_num);
 void set_leaf_node_key(void *node, uint32_t cell_num, uint32_t key);
