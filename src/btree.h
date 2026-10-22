@@ -51,6 +51,9 @@ void set_leaf_node_key(void *node, uint32_t cell_num, uint32_t key);
 void *leaf_node_value(void *node, uint32_t cell_num);
 void initialize_leaf_node(void *node);
 
+/* Binary search: index of `key`, or the index where it would be inserted. */
+uint32_t leaf_node_find(void *node, uint32_t key);
+
 /* Inserts (key, row) at the cursor position, shifting later cells right. */
 void leaf_node_insert(Cursor *cursor, uint32_t key, const Row *row);
 

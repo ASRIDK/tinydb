@@ -53,6 +53,24 @@ void initialize_leaf_node(void *node) {
     set_leaf_node_num_cells(node, 0);
 }
 
+uint32_t leaf_node_find(void *node, uint32_t key) {
+    uint32_t min_index = 0;
+    uint32_t one_past_max_index = leaf_node_num_cells(node);
+    while (min_index != one_past_max_index) {
+        uint32_t index = min_index + (one_past_max_index - min_index) / 2;
+        uint32_t key_at_index = leaf_node_key(node, index);
+        if (key == key_at_index) {
+            return index;
+        }
+        if (key < key_at_index) {
+            one_past_max_index = index;
+        } else {
+            min_index = index + 1;
+        }
+    }
+    return min_index;
+}
+
 void leaf_node_insert(Cursor *cursor, uint32_t key, const Row *row) {
     void *node = get_page(cursor->table->pager, cursor->page_num);
     uint32_t num_cells = leaf_node_num_cells(node);

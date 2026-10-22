@@ -46,6 +46,26 @@ class TestTinyDB(unittest.TestCase):
         output = self.run_script(commands)
         self.assertEqual(output[-2], "db > Error: Table full.")
 
+    def test_rejects_duplicate_id(self):
+        output = self.run_script(
+            [
+                "insert 1 user1 person1@example.com",
+                "insert 1 user1 person1@example.com",
+                "select",
+                ".exit",
+            ]
+        )
+        self.assertEqual(
+            output,
+            [
+                "db > Executed.",
+                "db > Error: Duplicate key.",
+                "db > (1, user1, person1@example.com)",
+                "Executed.",
+                "db > ",
+            ],
+        )
+
     def test_prints_constants(self):
         output = self.run_script([".constants", ".exit"])
         self.assertEqual(
@@ -74,9 +94,9 @@ class TestTinyDB(unittest.TestCase):
                 "db > Executed.",
                 "db > Tree:",
                 "leaf (size 3)",
-                "  - 0 : 3",
-                "  - 1 : 1",
-                "  - 2 : 2",
+                "  - 0 : 1",
+                "  - 1 : 2",
+                "  - 2 : 3",
                 "db > ",
             ],
         )

@@ -31,7 +31,14 @@ static ExecuteResult execute_insert(const Statement *statement, Table *table) {
     }
 
     const Row *row = &statement->row_to_insert;
-    Cursor *cursor = table_end(table);
+    Cursor *cursor = table_find(table, row->id);
+
+    if (cursor->cell_num < leaf_node_num_cells(node) &&
+        leaf_node_key(node, cursor->cell_num) == row->id) {
+        free(cursor);
+        return EXECUTE_DUPLICATE_KEY;
+    }
+
     leaf_node_insert(cursor, row->id, row);
     free(cursor);
     return EXECUTE_SUCCESS;

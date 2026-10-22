@@ -15,7 +15,9 @@ typedef struct {
 } Cursor;
 
 Cursor *table_start(Table *table);
-Cursor *table_end(Table *table);
+
+/* Positions a cursor at `key`, or where `key` would be inserted. */
+Cursor *table_find(Table *table, uint32_t key);
 
 /* Returns the serialized row under the cursor. */
 void *cursor_value(Cursor *cursor);

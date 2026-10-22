@@ -11,7 +11,7 @@ typedef enum {
     META_COMMAND_UNRECOGNIZED_COMMAND
 } MetaCommandResult;
 
-typedef enum { EXECUTE_SUCCESS, EXECUTE_TABLE_FULL } ExecuteResult;
+typedef enum { EXECUTE_SUCCESS, EXECUTE_DUPLICATE_KEY, EXECUTE_TABLE_FULL } ExecuteResult;
 
 /* Handles dot-prefixed commands such as ".exit", ".btree" and ".constants". */
 MetaCommandResult do_meta_command(const InputBuffer *input, Table *table);

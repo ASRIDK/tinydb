@@ -23,9 +23,9 @@ Cursor *table_start(Table *table) {
     return cursor_new(table, table->root_page_num, 0);
 }
 
-Cursor *table_end(Table *table) {
+Cursor *table_find(Table *table, uint32_t key) {
     void *root_node = get_page(table->pager, table->root_page_num);
-    return cursor_new(table, table->root_page_num, leaf_node_num_cells(root_node));
+    return cursor_new(table, table->root_page_num, leaf_node_find(root_node, key));
 }
 
 void *cursor_value(Cursor *cursor) {
