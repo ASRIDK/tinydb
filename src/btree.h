@@ -37,6 +37,8 @@ typedef enum { NODE_INTERNAL, NODE_LEAF } NodeType;
 #define INTERNAL_NODE_KEY_SIZE sizeof(uint32_t)
 #define INTERNAL_NODE_CHILD_SIZE sizeof(uint32_t)
 #define INTERNAL_NODE_CELL_SIZE (INTERNAL_NODE_CHILD_SIZE + INTERNAL_NODE_KEY_SIZE)
+/* Deliberately tiny so that the tests can exercise internal node splits. */
+#define INTERNAL_NODE_MAX_KEYS 3
 
 /*
  * Leaf node layout
@@ -69,6 +71,8 @@ NodeType get_node_type(const void *node);
 void set_node_type(void *node, NodeType type);
 bool is_node_root(const void *node);
 void set_node_root(void *node, bool is_root);
+uint32_t node_parent(const void *node);
+void set_node_parent(void *node, uint32_t page_num);
 
 /* Internal node accessors. */
 uint32_t internal_node_num_keys(const void *node);
@@ -83,6 +87,9 @@ void initialize_internal_node(void *node);
 
 /* Index of the child that should contain `key`. */
 uint32_t internal_node_find_child(void *node, uint32_t key);
+
+/* Adds `child_page_num` to the internal node `parent_page_num`. */
+void internal_node_insert(Table *table, uint32_t parent_page_num, uint32_t child_page_num);
 
 /* Leaf node accessors. */
 uint32_t leaf_node_num_cells(const void *node);

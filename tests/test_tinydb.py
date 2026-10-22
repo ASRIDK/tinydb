@@ -1,6 +1,7 @@
 """End-to-end tests that drive the tinydb REPL through stdin."""
 
 import os
+import random
 import subprocess
 import tempfile
 import unittest
@@ -152,6 +153,28 @@ class TestTinyDB(unittest.TestCase):
         self.assertEqual(
             output[15:], ["db > " + expected_rows[0], *expected_rows[1:], "Executed.", "db > "]
         )
+
+    def test_returns_rows_sorted_after_random_inserts(self):
+        ids = list(range(1, 31))
+        random.Random(42).shuffle(ids)
+        commands = [f"insert {i} user{i} person{i}@example.com" for i in ids]
+        commands += ["select", ".exit"]
+        output = self.run_script(commands)
+        rows = [line.removeprefix("db > ") for line in output[len(ids) : len(ids) + 30]]
+        self.assertEqual(rows, [f"({i}, user{i}, person{i}@example.com)" for i in range(1, 31)])
+
+    def test_prints_structure_of_four_leaf_node_btree(self):
+        commands = [f"insert {i} user{i} person{i}@example.com" for i in range(1, 31)]
+        commands += [".btree", ".exit"]
+        output = self.run_script(commands)
+        expected = ["db > Tree:", "- internal (size 3)"]
+        for low, high, separator in ((1, 7, 7), (8, 14, 14), (15, 21, 21), (22, 30, None)):
+            expected.append(f"  - leaf (size {high - low + 1})")
+            expected += [f"    - {i}" for i in range(low, high + 1)]
+            if separator is not None:
+                expected.append(f"  - key {separator}")
+        expected.append("db > ")
+        self.assertEqual(output[30:], expected)
 
 
 if __name__ == "__main__":
