@@ -36,7 +36,9 @@ static PrepareResult prepare_insert(InputBuffer *input, Statement *statement) {
 }
 
 PrepareResult prepare_statement(InputBuffer *input, Statement *statement) {
-    if (strncmp(input->buffer, "insert", 6) == 0) {
+    /* Match the whole keyword so e.g. "insertx 1 a b" is not accepted. */
+    if (strncmp(input->buffer, "insert", 6) == 0 &&
+        (input->buffer[6] == ' ' || input->buffer[6] == '\0')) {
         return prepare_insert(input, statement);
     }
     if (strcmp(input->buffer, "select") == 0) {
