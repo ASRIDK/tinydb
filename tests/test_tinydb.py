@@ -163,6 +163,24 @@ class TestTinyDB(unittest.TestCase):
         output = self.run_script(["insert -1 cstack foo@bar.com", "select", ".exit"])
         self.assertEqual(output, ["db > ID must be positive.", "db > Executed.", "db > "])
 
+    def test_rejects_insert_keyword_with_trailing_characters(self):
+        output = self.run_script(["insertx 1 user1 a@b.com", "select", ".exit"])
+        self.assertEqual(
+            output,
+            [
+                "db > Unrecognized keyword at start of 'insertx 1 user1 a@b.com'.",
+                "db > Executed.",
+                "db > ",
+            ],
+        )
+
+    def test_rejects_id_larger_than_uint32(self):
+        output = self.run_script(["insert 4294967296 user1 a@b.com", "select", ".exit"])
+        self.assertEqual(
+            output,
+            ["db > Syntax error. Could not parse statement.", "db > Executed.", "db > "],
+        )
+
     def test_rejects_malformed_insert(self):
         output = self.run_script(["insert 1 onlyuser", "insert abc user email", ".exit"])
         self.assertEqual(
