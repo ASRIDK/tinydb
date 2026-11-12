@@ -10,7 +10,8 @@ static PrepareResult prepare_insert(InputBuffer *input, Statement *statement) {
     char *id_string = strtok(NULL, " ");
     char *username = strtok(NULL, " ");
     char *email = strtok(NULL, " ");
-    if (id_string == NULL || username == NULL || email == NULL) {
+    char *extra = strtok(NULL, " ");
+    if (id_string == NULL || username == NULL || email == NULL || extra != NULL) {
         return PREPARE_SYNTAX_ERROR;
     }
 
