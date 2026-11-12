@@ -192,6 +192,13 @@ class TestTinyDB(unittest.TestCase):
             ],
         )
 
+    def test_rejects_insert_with_extra_tokens(self):
+        output = self.run_script(["insert 1 user1 a@b.com junk", "select", ".exit"])
+        self.assertEqual(
+            output,
+            ["db > Syntax error. Could not parse statement.", "db > Executed.", "db > "],
+        )
+
     def test_prints_structure_of_three_leaf_node_btree(self):
         commands = [f"insert {i} user{i} person{i}@example.com" for i in range(1, 15)]
         commands += [".btree", "insert 15 user15 person15@example.com", ".exit"]
