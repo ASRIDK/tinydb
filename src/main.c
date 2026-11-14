@@ -25,7 +25,15 @@ int main(int argc, char *argv[]) {
 
     for (;;) {
         print_prompt();
-        if (read_input(input) != 0) {
+        int status = read_input(input);
+        if (status == 1) {
+            /* End of input (e.g. Ctrl-D or a piped script without .exit): save and exit cleanly. */
+            printf("\n");
+            input_buffer_free(input);
+            db_close(table);
+            return EXIT_SUCCESS;
+        }
+        if (status != 0) {
             fprintf(stderr, "Error reading input.\n");
             break;
         }
