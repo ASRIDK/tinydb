@@ -22,7 +22,7 @@ void input_buffer_free(InputBuffer *input) {
 int read_input(InputBuffer *input) {
     ssize_t bytes_read = getline(&input->buffer, &input->buffer_length, stdin);
     if (bytes_read <= 0) {
-        return -1;
+        return feof(stdin) ? 1 : -1;
     }
 
     /* Strip the trailing newline. */
