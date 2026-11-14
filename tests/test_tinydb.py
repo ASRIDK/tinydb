@@ -77,6 +77,24 @@ class TestTinyDB(unittest.TestCase):
         )
         return result.stdout.split("\n")
 
+    def run_raw(self, commands):
+        """Like run_script but returns the full CompletedProcess (return code, stderr)."""
+        script = "\n".join(commands) + "\n"
+        return subprocess.run(
+            [str(BINARY), self.db_path], input=script, capture_output=True, text=True, timeout=30
+        )
+
+    def test_end_of_input_without_exit_is_a_clean_shutdown(self):
+        result = self.run_raw(["insert 1 a b"])  # no .exit: stdin just ends
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stderr, "")
+        self.assertIn("db > Executed.", result.stdout)
+
+    def test_end_of_input_persists_data(self):
+        self.run_raw(["insert 1 a b"])
+        output = self.run_script(["select", ".exit"])
+        self.assertEqual(output[0], "db > (1, a, b)")
+
     def test_inserts_and_retrieves_a_row(self):
         output = self.run_script(["insert 1 user1 person1@example.com", "select", ".exit"])
         self.assertEqual(
