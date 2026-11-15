@@ -25,9 +25,12 @@ int read_input(InputBuffer *input) {
         return feof(stdin) ? 1 : -1;
     }
 
-    /* Strip the trailing newline. */
+    /* Strip the trailing newline, and a preceding carriage return (CRLF scripts). */
     if (input->buffer[bytes_read - 1] == '\n') {
         input->buffer[--bytes_read] = '\0';
+        if (bytes_read > 0 && input->buffer[bytes_read - 1] == '\r') {
+            input->buffer[--bytes_read] = '\0';
+        }
     }
     input->input_length = bytes_read;
     return 0;
