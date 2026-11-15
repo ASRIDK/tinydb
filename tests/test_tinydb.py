@@ -290,6 +290,37 @@ class TestTinyDB(unittest.TestCase):
         output = self.run_script(["select", ".exit"])
         self.assertEqual(len(output) - 2, inserted)  # every accepted row is persisted
 
+    def test_ignores_blank_lines(self):
+        output = self.run_script(["", "insert 1 a b", "", "select", ".exit"])
+        self.assertEqual(output[:3], ["db > db > Executed.", "db > db > (1, a, b)", "Executed."])
+        self.assertNotIn("Unrecognized", "\n".join(output))
+
+    def test_accepts_crlf_line_endings(self):
+        script = "insert 1 a b\r\nselect\r\n.exit\r\n"
+        result = subprocess.run(
+            [str(BINARY), self.db_path], input=script, capture_output=True, text=True, timeout=30,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("db > (1, a, b)", result.stdout)
+        self.assertNotIn("Syntax error", result.stdout)
+
+    def test_reports_unrecognized_meta_command_and_keyword(self):
+        output = self.run_script([".nope", "frobnicate", ".exit"])
+        self.assertEqual(
+            output[:2],
+            ["db > Unrecognized command '.nope'.", "db > Unrecognized keyword at start of 'frobnicate'."],
+        )
+
+    def test_select_on_empty_database_prints_only_executed(self):
+        self.assertEqual(self.run_script(["select", ".exit"])[:1], ["db > Executed."])
+
+    def test_unopenable_database_path_fails_with_message(self):
+        result = subprocess.run(
+            [str(BINARY), "/nonexistent-dir/x.db"], input="", capture_output=True, text=True, timeout=30,
+        )
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("unable to open database file", result.stderr)
+
     def test_tree_invariants_hold_after_internal_splits(self):
         for seed in range(5):
             with self.subTest(seed=seed):
