@@ -38,6 +38,10 @@ int main(int argc, char *argv[]) {
             break;
         }
 
+        if (input->buffer[0] == '\0') {
+            continue; /* blank line: nothing to do */
+        }
+
         if (input->buffer[0] == '.') {
             MetaCommandResult result = do_meta_command(input, table);
             if (result == META_COMMAND_EXIT) {
