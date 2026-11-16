@@ -199,6 +199,41 @@ class TestTinyDB(unittest.TestCase):
             ["db > Syntax error. Could not parse statement.", "db > Executed.", "db > "],
         )
 
+    def test_accepts_boundary_ids(self):
+        output = self.run_script(["insert 0 a a@b.c", "insert 4294967295 z z@b.c", "select", ".exit"])
+        self.assertEqual(
+            output,
+            [
+                "db > Executed.",
+                "db > Executed.",
+                "db > (0, a, a@b.c)",
+                "(4294967295, z, z@b.c)",
+                "Executed.",
+                "db > ",
+            ],
+        )
+
+    def test_rejects_ids_that_overflow_long(self):
+        output = self.run_script(
+            ["insert 99999999999999999999 a b", "insert -99999999999999999999 a b", ".exit"]
+        )
+        self.assertEqual(
+            output,
+            [
+                "db > Syntax error. Could not parse statement.",
+                "db > ID must be positive.",
+                "db > ",
+            ],
+        )
+
+    def test_bare_insert_is_a_syntax_error(self):
+        output = self.run_script(["insert", ".exit"])
+        self.assertEqual(output, ["db > Syntax error. Could not parse statement.", "db > "])
+
+    def test_select_with_trailing_tokens_is_unrecognized(self):
+        output = self.run_script(["select extra", ".exit"])
+        self.assertEqual(output, ["db > Unrecognized keyword at start of 'select extra'.", "db > "])
+
     def test_rejects_malformed_insert(self):
         output = self.run_script(["insert 1 onlyuser", "insert abc user email", ".exit"])
         self.assertEqual(
