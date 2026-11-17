@@ -346,6 +346,38 @@ class TestTinyDB(unittest.TestCase):
             ["db > Unrecognized command '.nope'.", "db > Unrecognized keyword at start of 'frobnicate'."],
         )
 
+    def test_rejects_non_integer_ids(self):
+        output = self.run_script(["insert 1.5 a b", "insert 5x a b", "select", ".exit"])
+        self.assertEqual(
+            output,
+            [
+                "db > Syntax error. Could not parse statement.",
+                "db > Syntax error. Could not parse statement.",
+                "db > Executed.",
+                "db > ",
+            ],
+        )
+
+    def test_keywords_are_case_sensitive_and_not_whitespace_trimmed(self):
+        output = self.run_script(["INSERT 1 a b", "  insert 1 a b", "select", ".exit"])
+        self.assertEqual(
+            output,
+            [
+                "db > Unrecognized keyword at start of 'INSERT 1 a b'.",
+                "db > Unrecognized keyword at start of '  insert 1 a b'.",
+                "db > Executed.",
+                "db > ",
+            ],
+        )
+
+    def test_meta_command_with_trailing_arguments_is_unrecognized(self):
+        output = self.run_script([".exit now", ".exit"])
+        self.assertEqual(output, ["db > Unrecognized command '.exit now'.", "db > "])
+
+    def test_accepts_id_zero(self):
+        output = self.run_script(["insert 0 zero z@example.com", "select", ".exit"])
+        self.assertEqual(output, ["db > Executed.", "db > (0, zero, z@example.com)", "Executed.", "db > "])
+
     def test_select_on_empty_database_prints_only_executed(self):
         self.assertEqual(self.run_script(["select", ".exit"])[:1], ["db > Executed."])
 
