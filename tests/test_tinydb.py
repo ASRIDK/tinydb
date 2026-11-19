@@ -388,6 +388,20 @@ class TestTinyDB(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("unable to open database file", result.stderr)
 
+    def test_missing_database_argument_prints_usage(self):
+        result = subprocess.run([str(BINARY)], input="", capture_output=True, text=True, timeout=30)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Usage:", result.stderr)
+
+    def test_file_that_is_not_whole_pages_is_reported_corrupt(self):
+        with open(self.db_path, "wb") as f:
+            f.write(b"x" * 100)
+        result = self.run_raw([".exit"])
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("Corrupt file", result.stderr)
+        with open(self.db_path, "rb") as f:
+            self.assertEqual(f.read(), b"x" * 100)  # left untouched
+
     def test_tree_invariants_hold_after_internal_splits(self):
         for seed in range(5):
             with self.subTest(seed=seed):
