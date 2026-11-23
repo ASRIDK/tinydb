@@ -1,5 +1,6 @@
 #include "statement.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -36,15 +37,43 @@ static PrepareResult prepare_insert(InputBuffer *input, Statement *statement) {
     return PREPARE_SUCCESS;
 }
 
+static PrepareResult prepare_select(InputBuffer *input, Statement *statement) {
+    statement->type = STATEMENT_SELECT;
+    statement->select_by_id = 0;
+    if (input->buffer[6] == '\0') {
+        return PREPARE_SUCCESS;
+    }
+
+    strtok(input->buffer, " ");
+    char *id_string = strtok(NULL, " ");
+    char *extra = strtok(NULL, " ");
+    if (id_string == NULL || extra != NULL) {
+        return PREPARE_SYNTAX_ERROR;
+    }
+
+    char *end = NULL;
+    errno = 0;
+    long id = strtol(id_string, &end, 10);
+    if (*end != '\0' || errno == ERANGE || id > UINT32_MAX) {
+        return PREPARE_SYNTAX_ERROR;
+    }
+    if (id < 0) {
+        return PREPARE_NEGATIVE_ID;
+    }
+    statement->select_by_id = 1;
+    statement->select_id = (uint32_t)id;
+    return PREPARE_SUCCESS;
+}
+
 PrepareResult prepare_statement(InputBuffer *input, Statement *statement) {
     /* Match the whole keyword so e.g. "insertx 1 a b" is not accepted. */
     if (strncmp(input->buffer, "insert", 6) == 0 &&
         (input->buffer[6] == ' ' || input->buffer[6] == '\0')) {
         return prepare_insert(input, statement);
     }
-    if (strcmp(input->buffer, "select") == 0) {
-        statement->type = STATEMENT_SELECT;
-        return PREPARE_SUCCESS;
+    if (strncmp(input->buffer, "select", 6) == 0 &&
+        (input->buffer[6] == ' ' || input->buffer[6] == '\0')) {
+        return prepare_select(input, statement);
     }
     return PREPARE_UNRECOGNIZED_STATEMENT;
 }

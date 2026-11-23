@@ -46,7 +46,20 @@ static ExecuteResult execute_insert(const Statement *statement, Table *table) {
     return EXECUTE_SUCCESS;
 }
 
-static ExecuteResult execute_select(Table *table) {
+static ExecuteResult execute_select(const Statement *statement, Table *table) {
+    if (statement->select_by_id) {
+        Cursor *found = table_find(table, statement->select_id);
+        void *node = get_page(table->pager, found->page_num);
+        if (found->cell_num < leaf_node_num_cells(node) &&
+            leaf_node_key(node, found->cell_num) == statement->select_id) {
+            Row row;
+            deserialize_row(cursor_value(found), &row);
+            print_row(&row);
+        }
+        free(found);
+        return EXECUTE_SUCCESS;
+    }
+
     Cursor *cursor = table_start(table);
     Row row;
     while (!cursor->end_of_table) {
@@ -63,7 +76,7 @@ ExecuteResult execute_statement(const Statement *statement, Table *table) {
     case STATEMENT_INSERT:
         return execute_insert(statement, table);
     case STATEMENT_SELECT:
-        return execute_select(table);
+        return execute_select(statement, table);
     }
     return EXECUTE_SUCCESS;
 }
