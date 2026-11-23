@@ -230,9 +230,35 @@ class TestTinyDB(unittest.TestCase):
         output = self.run_script(["insert", ".exit"])
         self.assertEqual(output, ["db > Syntax error. Could not parse statement.", "db > "])
 
-    def test_select_with_trailing_tokens_is_unrecognized(self):
-        output = self.run_script(["select extra", ".exit"])
-        self.assertEqual(output, ["db > Unrecognized keyword at start of 'select extra'.", "db > "])
+    def test_select_with_non_integer_argument_is_a_syntax_error(self):
+        output = self.run_script(["select extra", "select 1 2", ".exit"])
+        self.assertEqual(output[:2], ["db > Syntax error. Could not parse statement."] * 2)
+
+    def test_select_keyword_with_trailing_characters_is_unrecognized(self):
+        output = self.run_script(["selectx", ".exit"])
+        self.assertEqual(output, ["db > Unrecognized keyword at start of 'selectx'.", "db > "])
+
+    def test_select_by_id_returns_only_that_row(self):
+        output = self.run_script(
+            ["insert 1 a a@x", "insert 2 b b@x", "insert 3 c c@x", "select 2", ".exit"]
+        )
+        self.assertEqual(output[3:5], ["db > (2, b, b@x)", "Executed."])
+
+    def test_select_by_id_missing_row_prints_nothing(self):
+        output = self.run_script(["insert 1 a a@x", "select 7", "select 0", ".exit"])
+        self.assertEqual(output[1:4], ["db > Executed.", "db > Executed.", "db > "])
+
+    def test_select_by_id_across_a_multi_level_tree(self):
+        inserts = [f"insert {i} u{i} u{i}@x" for i in range(1, 41)]
+        output = self.run_script(inserts + ["select 1", "select 20", "select 40", "select 41", ".exit"])
+        tail = "\n".join(output[40:])
+        for expected in ("(1, u1, u1@x)", "(20, u20, u20@x)", "(40, u40, u40@x)"):
+            self.assertIn(expected, tail)
+        self.assertNotIn("(41,", tail)
+
+    def test_select_by_negative_id_is_rejected(self):
+        output = self.run_script(["select -1", ".exit"])
+        self.assertEqual(output[0], "db > ID must be positive.")
 
     def test_rejects_malformed_insert(self):
         output = self.run_script(["insert 1 onlyuser", "insert abc user email", ".exit"])

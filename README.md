@@ -88,6 +88,7 @@ The table schema is fixed:
 |--------------|-----------------------------------------------|
 | `insert <id> <username> <email>` | Inserts a row.            |
 | `select`     | Prints every row in key order.                |
+| `select <id>`| Prints the row with that id, if it exists.    |
 | `.btree`     | Prints the structure of the B+ tree.          |
 | `.constants` | Prints the binary layout constants.           |
 | `.exit`      | Flushes all pages to disk and exits.          |
