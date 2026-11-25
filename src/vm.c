@@ -71,12 +71,26 @@ static ExecuteResult execute_select(const Statement *statement, Table *table) {
     return EXECUTE_SUCCESS;
 }
 
+static ExecuteResult execute_count(Table *table) {
+    Cursor *cursor = table_start(table);
+    unsigned long count = 0;
+    while (!cursor->end_of_table) {
+        count++;
+        cursor_advance(cursor);
+    }
+    free(cursor);
+    printf("Count: %lu\n", count);
+    return EXECUTE_SUCCESS;
+}
+
 ExecuteResult execute_statement(const Statement *statement, Table *table) {
     switch (statement->type) {
     case STATEMENT_INSERT:
         return execute_insert(statement, table);
     case STATEMENT_SELECT:
         return execute_select(statement, table);
+    case STATEMENT_COUNT:
+        return execute_count(table);
     }
     return EXECUTE_SUCCESS;
 }
