@@ -444,6 +444,23 @@ class TestTinyDB(unittest.TestCase):
                 self.assertEqual(tree["type"], "internal")
                 self.assertEqual(check_btree(tree), (1, 300))
 
+    def test_count_reports_number_of_rows(self):
+        inserts = [f"insert {i} u{i} u{i}@x" for i in range(1, 41)]
+        output = self.run_script(["count"] + inserts + ["count", "insert 5 d d@x", "count", ".exit"])
+        self.assertEqual(output[:2], ["db > Count: 0", "Executed."])
+        self.assertEqual(output[-6:], [
+            "db > Count: 40", "Executed.",
+            "db > Error: Duplicate key.",
+            "db > Count: 40", "Executed.", "db > ",
+        ])
+
+    def test_count_persists_and_rejects_arguments(self):
+        self.run_script(["insert 1 a a@x", "insert 2 b b@x", ".exit"])
+        output = self.run_script(["count", "count now", "counts", ".exit"])
+        self.assertEqual(output[:2], ["db > Count: 2", "Executed."])
+        self.assertEqual(output[2], "db > Syntax error. Could not parse statement.")
+        self.assertEqual(output[3], "db > Unrecognized keyword at start of 'counts'.")
+
 
 if __name__ == "__main__":
     unittest.main()

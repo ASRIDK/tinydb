@@ -75,5 +75,11 @@ PrepareResult prepare_statement(InputBuffer *input, Statement *statement) {
         (input->buffer[6] == ' ' || input->buffer[6] == '\0')) {
         return prepare_select(input, statement);
     }
+    if (strncmp(input->buffer, "count", 5) == 0 &&
+        (input->buffer[5] == ' ' || input->buffer[5] == '\0')) {
+        statement->type = STATEMENT_COUNT;
+        strtok(input->buffer, " ");
+        return strtok(NULL, " ") == NULL ? PREPARE_SUCCESS : PREPARE_SYNTAX_ERROR;
+    }
     return PREPARE_UNRECOGNIZED_STATEMENT;
 }
