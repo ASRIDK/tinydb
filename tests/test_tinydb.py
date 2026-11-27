@@ -461,6 +461,15 @@ class TestTinyDB(unittest.TestCase):
         self.assertEqual(output[2], "db > Syntax error. Could not parse statement.")
         self.assertEqual(output[3], "db > Unrecognized keyword at start of 'counts'.")
 
+    def test_help_lists_commands_and_keeps_session_alive(self):
+        output = self.run_script([".help", ".help now", "insert 1 a a@x", "count", ".exit"])
+        self.assertEqual(output[0], "db > Commands:")
+        listing = "\n".join(output[1:8])
+        for command in ("insert", "select", "count", ".btree", ".constants", ".help", ".exit"):
+            self.assertIn(command, listing)
+        self.assertEqual(output[8], "db > Unrecognized command '.help now'.")
+        self.assertIn("db > Count: 1", output)
+
 
 if __name__ == "__main__":
     unittest.main()
