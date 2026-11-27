@@ -21,6 +21,17 @@ MetaCommandResult do_meta_command(const InputBuffer *input, Table *table) {
         print_constants();
         return META_COMMAND_SUCCESS;
     }
+    if (strcmp(input->buffer, ".help") == 0) {
+        printf("Commands:\n");
+        printf("  insert <id> <username> <email>  Insert a row\n");
+        printf("  select [<id>]                   Print all rows, or the row with that id\n");
+        printf("  count                           Print the number of rows\n");
+        printf("  .btree                          Print the B+ tree structure\n");
+        printf("  .constants                      Print the binary layout constants\n");
+        printf("  .help                           Show this message\n");
+        printf("  .exit                           Flush to disk and exit\n");
+        return META_COMMAND_SUCCESS;
+    }
     return META_COMMAND_UNRECOGNIZED_COMMAND;
 }
 

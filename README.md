@@ -92,6 +92,7 @@ The table schema is fixed:
 | `count`      | Prints the number of rows in the table.       |
 | `.btree`     | Prints the structure of the B+ tree.          |
 | `.constants` | Prints the binary layout constants.           |
+| `.help`      | Lists the available commands.                 |
 | `.exit`      | Flushes all pages to disk and exits.          |
 
 ## Architecture
