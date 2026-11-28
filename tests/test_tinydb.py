@@ -264,8 +264,8 @@ class TestTinyDB(unittest.TestCase):
     def test_select_range_rejects_reversed_negative_and_extra_arguments(self):
         output = self.run_script(["select 5 2", "select -1 4", "select 1 -4", "select 1 2 3", "select 1 x", ".exit"])
         self.assertEqual(output[0], "db > Syntax error. Could not parse statement.")
-        self.assertEqual(output[1], "db > id must be positive.")
-        self.assertEqual(output[2], "db > id must be positive.")
+        self.assertEqual(output[1], "db > ID must be positive.")
+        self.assertEqual(output[2], "db > ID must be positive.")
         self.assertEqual(output[3], "db > Syntax error. Could not parse statement.")
         self.assertEqual(output[4], "db > Syntax error. Could not parse statement.")
 
