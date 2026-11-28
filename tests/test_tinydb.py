@@ -231,7 +231,7 @@ class TestTinyDB(unittest.TestCase):
         self.assertEqual(output, ["db > Syntax error. Could not parse statement.", "db > "])
 
     def test_select_with_non_integer_argument_is_a_syntax_error(self):
-        output = self.run_script(["select extra", "select 1 2", ".exit"])
+        output = self.run_script(["select extra", "select 1 2 3", ".exit"])
         self.assertEqual(output[:2], ["db > Syntax error. Could not parse statement."] * 2)
 
     def test_select_keyword_with_trailing_characters_is_unrecognized(self):
@@ -247,6 +247,27 @@ class TestTinyDB(unittest.TestCase):
     def test_select_by_id_missing_row_prints_nothing(self):
         output = self.run_script(["insert 1 a a@x", "select 7", "select 0", ".exit"])
         self.assertEqual(output[1:4], ["db > Executed.", "db > Executed.", "db > "])
+
+    def test_select_range_returns_inclusive_ids_in_order(self):
+        inserts = [f"insert {i} u{i} u{i}@x" for i in (5, 1, 9, 3, 7)]
+        output = self.run_script(inserts + ["select 3 7", "select 4 4", "select 10 20", ".exit"])
+        self.assertEqual(output[5:9], ["db > (3, u3, u3@x)", "(5, u5, u5@x)", "(7, u7, u7@x)", "Executed."])
+        self.assertEqual(output[9:11], ["db > Executed.", "db > Executed."])
+
+    def test_select_range_on_empty_table_and_across_leaves(self):
+        self.assertEqual(self.run_script(["select 1 5", ".exit"])[0:2], ["db > Executed.", "db > "])
+        inserts = [f"insert {i} u{i} u{i}@x" for i in range(1, 41)]
+        output = self.run_script(inserts + ["select 8 33", ".exit"])
+        rows = [line.replace("db > ", "") for line in output[40:] if "(" in line]
+        self.assertEqual(rows, [f"({i}, u{i}, u{i}@x)" for i in range(8, 34)])
+
+    def test_select_range_rejects_reversed_negative_and_extra_arguments(self):
+        output = self.run_script(["select 5 2", "select -1 4", "select 1 -4", "select 1 2 3", "select 1 x", ".exit"])
+        self.assertEqual(output[0], "db > Syntax error. Could not parse statement.")
+        self.assertEqual(output[1], "db > ID must be positive.")
+        self.assertEqual(output[2], "db > ID must be positive.")
+        self.assertEqual(output[3], "db > Syntax error. Could not parse statement.")
+        self.assertEqual(output[4], "db > Syntax error. Could not parse statement.")
 
     def test_select_by_id_across_a_multi_level_tree(self):
         inserts = [f"insert {i} u{i} u{i}@x" for i in range(1, 41)]

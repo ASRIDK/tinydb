@@ -24,7 +24,7 @@ MetaCommandResult do_meta_command(const InputBuffer *input, Table *table) {
     if (strcmp(input->buffer, ".help") == 0) {
         printf("Commands:\n");
         printf("  insert <id> <username> <email>  Insert a row\n");
-        printf("  select [<id>]                   Print all rows, or the row with that id\n");
+        printf("  select [<id> [<high>]]          Print all rows, the row with that id, or ids in a range\n");
         printf("  count                           Print the number of rows\n");
         printf("  .btree                          Print the B+ tree structure\n");
         printf("  .constants                      Print the binary layout constants\n");
@@ -71,10 +71,27 @@ static ExecuteResult execute_select(const Statement *statement, Table *table) {
         return EXECUTE_SUCCESS;
     }
 
-    Cursor *cursor = table_start(table);
+    Cursor *cursor = statement->select_range ? table_find(table, statement->select_id)
+                                             : table_start(table);
+    if (statement->select_range) {
+        /* The search can land one past the last cell of a leaf; hop to the next row. */
+        void *node = get_page(table->pager, cursor->page_num);
+        uint32_t cells = leaf_node_num_cells(node);
+        if (cursor->cell_num >= cells) {
+            if (cells == 0) {
+                cursor->end_of_table = true;
+            } else {
+                cursor->cell_num = cells - 1;
+                cursor_advance(cursor);
+            }
+        }
+    }
     Row row;
     while (!cursor->end_of_table) {
         deserialize_row(cursor_value(cursor), &row);
+        if (statement->select_range && row.id > statement->select_high) {
+            break;
+        }
         print_row(&row);
         cursor_advance(cursor);
     }

@@ -18,7 +18,9 @@ typedef struct {
     StatementType type;
     Row row_to_insert;   /* only used by insert statements */
     int select_by_id;    /* nonzero if a select is restricted to one id */
-    uint32_t select_id;  /* the id to look up when select_by_id is set */
+    uint32_t select_id;  /* the id to look up (or the range start) */
+    int select_range;    /* nonzero if a select covers select_id..select_high */
+    uint32_t select_high; /* inclusive range end when select_range is set */
 } Statement;
 
 /* Compiles a line of SQL into a Statement. Tokenizes the input buffer in place. */
